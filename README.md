@@ -1,85 +1,75 @@
-# 1. Project Introduction
+## Overview
 
-Olist E-commerce Data Pipeline — End-to-end ETL pipeline on Brazilian marketplace data, modeled in a star schema, deployed on ..
+This project implements a multi-stage ETL pipeline using a Lakehouse Medallion architecture (Bronze, Silver, Gold). Raw data is incrementally ingested, transformed using PySpark, and stored as progressively cleaner and more analytics-ready datasets.
 
-# 2. Overview / Description
+The pipeline demonstrates how large-scale data can be structured, validated, and curated using lakehouses while maintaining clear separation of concerns across data layers.
 
-What problem are you solving?
-Why is this project interesting or useful?
-*Keep it non-technical enough that even a recruiter can follow.
+## Dataset
 
-# 3. Project Architecture
+This project uses the public Olist Brazilian E-commerce Dataset retrieved using the Kaggle API, which contains:
+- Orders, customers, sellers, products, payments, and reviews
+- Over 100k orders across multiple years
 
-High-level diagram or description.
+## Architecture
 
-Tools/tech stack: 
+Bronze → Silver → Gold
 
-How the components interact (extraction → transformation → loading → analysis).
+Bronze: Raw, immutable ingested data
 
-# 4. Datasets
+Silver: Cleaned, validated, and standardized data
 
-Source: Kaggle Olist dataset
+Gold: Business-ready, aggregated datasets for analytics and reporting
 
-Short description of what the dataset contains.
+All layers reside in the same lakehouse, but each represents a logical stage in the ETL process.
 
-Any data quality/cleaning steps.
+## Pipeline Flow
 
-# 5. Setup / Installation
+**Ingestion (Bronze Layer)**
+- Raw data is loaded into the Bronze layer with minimal processing.
+- Data is stored in its original structure to preserve lineage and enable reprocessing.
 
-Instructions to clone the repo.
+**Transformation to Silver:** 
+PySpark is used to:
+- Clean and normalize data
+- Handle missing or invalid values
+- Apply basic business rules
 
-Dependencies e.g. requirements.txt
+**Transformation to Gold:**
+Additional PySpark transformations are applied on Silver data to:
+- Aggregate metrics 
+- Denormalize tables where needed
+- Prepare analytics- and reporting-ready datasets
 
-Environment variables (.env template, e.g., database credentials).
+The Gold Layer enables analysis of key operational questions pertaining to delivery fulfillment, including but not limited to:
+- On-time vs late delivery rates by seller and product category
+- Average delivery time compared to estimated delivery dates
+- Impact of late deliveries on customer review scores
+- Order volume and fulfillment trends over time
 
-# 6. Usage / How to Run
+## Data Quality & Testing
+PyTest is used to validate Silver and Gold layer transformations, including:
+- Schema validation (expected columns and data types)
+- Null and duplicate checks on key identifiers
+- Business rule validation (e.g. delivery date ≥ order date)
+- Row count checks to detect data loss during transformations
 
-Step-by-step guide to run the pipeline, notebook, or app.
+## Technologies Used
+- Microsoft Fabric (Data Pipeline for automating data ingestion)
+- Apache Spark (PySpark) & SQL for data transformations & querying
+- PyTest (for unit testing)
+- Lakehouse / Delta-style storage (for loading of data)
 
-Example commands (e.g., python pipeline.py).
+## Outcome
+The final Gold datasets are structured for:
+BI dashboard reporting (specifically focused on delivery fulfillment metrics)
 
-If using notebooks: link them and explain what each does.
+## Key Lessons Learnt
+- Deeper understanding of features available on Microsoft Fabric for data engineers/data analysts/data scientists
+- Design of galaxy schema for dimensional modelling 
+- Pipeline performance optimization techniques (e.g. partitioning, caching, broadcast joins, query tuning)
+- Advanced SQL querying: Used joins, subqueries, CTES to answer business questions
+- Writing PySpark code for big data transformations
 
-# 7. Results / Outputs
-
-Screenshots, sample queries, or charts.
-
-What insights did you get?
-
-Business recommendations (for portfolio impact).
-
-# 8. Repository Structure
-
-Tree view of key folders and what they contain.
-
-
-```text
-├── data/
-│   ├── raw/               # Original, immutable raw data dumps
-│   ├── processed/         # Final, canonical datasets for modeling/analysis
-│   └── interim/           # Intermediate datasets generated during ETL
-├── src/
-│   ├── extract/           # Code for data extraction
-│   ├── transform/         # Code for data transformation/wrangling
-│   ├── load/              # Code for data loading
-│   └── common/            # Reusable modules, utilities, and helpers
-├── notebooks/             # Jupyter notebooks for exploration/analysis
-├── configs/               # Configuration files (DB connections, API keys)
-├── tests/
-│   ├── unit/              # Unit tests for ETL components
-│   └── integration/       # End-to-end / pipeline tests
-├── reports/
-│   └── profiling/         # ydata-profiling (auto-generated) reports
-├── docs/                  # Project documentation (README, data contract, architecture)
-├── requirements.txt       # Project dependencies
-├── pipeline.py            # ETL pipeline orchestrator
-└── README.md              # Project overview & instructions
-```
-
-# 9. Testing
-
-How to run unit/integration tests (if you included them).
-
-# 10. Future Improvements
-
-What you’d add next (scalability, new features, CI/CD).
+## Future Enhancements
+- Introduce Slowly Changing Dimensions (SCD Type 2)
+- Implement automated tests using Great Expectations
